@@ -4,7 +4,8 @@
 # ----------------------------------------------------------------------------------
 # Source of this section: https://stackoverflow.com/a/38546197 (20170927)
 #                     and https://stackoverflow.com/a/37776099 (20170927).
-# Note: I slightly modified the above to remove caching and listification.
+# Note: I slightly modified the above to remove caching and listification, and also
+#       find Magick++-config on Debian and Arch Linux via the same lookup.
 #
 find_package(ImageMagick COMPONENTS Magick++ MagickCore)
 if(NOT ImageMagick_FOUND)
@@ -14,8 +15,8 @@ endif(NOT ImageMagick_FOUND)
 # Find Imagemagick Library directory.
 get_filename_component(MAGICK_LIB_DIR ${ImageMagick_MagickCore_LIBRARY} DIRECTORY)
 
-# Find where Magick++-config lives.
-file(GLOB_RECURSE MAGICK_CONFIG FOLLOW_SYMLINKS ${MAGICK_LIB_DIR}/Magick++-config)
+# Find where Magick++-config lives (note: also looks in $PATH).
+find_program(MAGICK_CONFIG Magick++-config ${MAGICK_LIB_DIR})
 message(STATUS " Magick++-config found at: ${MAGICK_CONFIG}")
 
 # Ask about CXX and lib flags/locations.

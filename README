@@ -13,6 +13,9 @@ little bit fuzzy, so a grace time of prior to when the last session began is use
 most recent session. Currently sessions do not honour flashcard sub-sets, but you can swap out the
 database to accomplish more fine-grained behaviour if desired.
 
+    The name 'mosaic' comes from an earlier version of this program that was created as a tiling
+image viewer. The display code, layout code, and modal approach were suited for flashcard review so
+the rest of the code was tailored to support flashcard review.
 
  Dependencies
  ============

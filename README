@@ -1,0 +1,26 @@
+
+ Project - Mosaic
+ ================
+
+    This program is a simplistic OpenGL-based flashcard viewer that implements a modified version of
+the SuperMemo algorithm (v2). It is vaguely similar to Anki, but is completely local. A (local) 
+sqlite database is used to persist user information (required for the algorithm).
+
+    Flashcards can contain images, including animated gifs, and are re-flowed to a comfortable line 
+length, but are otherwise displayed as-is. Flashcards are supplied as arguments to the executable,
+so sub-sets are naturally possible. What consitutes a 'session' (important for the algoithm) is a 
+little bit fuzzy, so a grace time of prior to when the last session began is used to demarcate the
+most recent session. Currently sessions do not honour flashcard sub-sets, but you can swap out the
+database to accomplish more fine-grained behaviour if desired.
+
+
+ Dependencies
+ ============
+
+  - ImageMagick
+  - sqlite3
+  - freeglut
+  - various X libs
+  - libygor
+
+

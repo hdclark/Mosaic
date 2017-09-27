@@ -10,13 +10,17 @@
 find_package(ImageMagick COMPONENTS Magick++ MagickCore)
 if(NOT ImageMagick_FOUND)
     message(ERROR "ImageMagick not found!")
-endif(NOT ImageMagick_FOUND)
-
-# Find Imagemagick Library directory.
-get_filename_component(MAGICK_LIB_DIR ${ImageMagick_MagickCore_LIBRARY} DIRECTORY)
+endif()
 
 # Find where Magick++-config lives (note: also looks in $PATH).
 find_program(MAGICK_CONFIG Magick++-config ${MAGICK_LIB_DIR})
+if(NOT MAGICK_CONFIG)
+    get_filename_component(MAGICK_LIB_DIR ${ImageMagick_MagickCore_LIBRARY} DIRECTORY)
+    file(GLOB_RECURSE MAGICK_CONFIG FOLLOW_SYMLINKS ${MAGICK_LIB_DIR}/Magick++-config)
+endif()
+if(NOT MAGICK_CONFIG)
+    message(ERROR "Magick++-config not found!")
+endif()
 message(STATUS " Magick++-config found at: ${MAGICK_CONFIG}")
 
 # Ask about CXX and lib flags/locations.
@@ -39,7 +43,7 @@ find_package(GLUT REQUIRED)
 include_directories(${GLUT_INCLUDE_DIR})
 if(NOT GLUT_FOUND)
     message(ERROR "GLUT not found!")
-endif(NOT GLUT_FOUND)
+endif()
 
 # ----------------------------------------------------------------------------------
 # Find OpenGL.
@@ -50,8 +54,7 @@ link_directories(${OpenGL_LIBRARY_DIRS})
 add_definitions(${OpenGL_DEFINITIONS})
 if(NOT OPENGL_FOUND)
     message(ERROR "OPENGL not found!")
-endif(NOT OPENGL_FOUND)
-
+endif()
 
 
 # ----------------------------------------------------------------------------------

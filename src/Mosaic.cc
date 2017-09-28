@@ -68,7 +68,7 @@ float Ortho_Middle_Inner_Outer = (Ortho_Inner + Ortho_Outer)/2.0;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //'Business logic' constants and globals.
 
-const std::string Version = "0.1.1 - Beta. Use at your own risk!"; 
+const std::string Version = "0.1.3 - Beta. Use at your own risk!"; 
 
 std::list<Generic_Screen_Frame> Frames; //Each frame contains a list of images and text to display.
 std::list<Generic_Screen_Frame>::iterator F_it;
@@ -80,6 +80,11 @@ long int Flashcards_Great = 0;
 
 long int New_Card_Limit = 30;  // Maximum number of previously-unseen cards to consider in one session.
                                // What is 'reasonable' depends on your goals and deadlines.
+                               // Note: Setting to zero disables the limit altogether.
+
+long int Seen_Card_Limit = 30;  // Maximum number of previously-seen cards to consider in one session.
+                                // What is 'reasonable' depends on your goals and deadlines.
+                                // Note: Setting to zero disables the limit altogether.
 
 long int Interval_Cap = 14; // The maximum re-review delay in days. Can be >=1. Setting this value larger will result in
                             // fewer re-reviews in each session, but you will cover cards less frequently. So it depends
@@ -619,12 +624,14 @@ int main(int argc, char* argv[]){
     //These are fairly common options. Run the program with -h to see them formatted properly.
 
     int next_options;
-    const char* const short_options    = "hVi:S"; //This is the list of short, single-letter options.
-                                                  //The : denotes a value passed in with the option.
+    const char* const short_options    = "hVi:Ss:n:"; //This is the list of short, single-letter options.
+                                                      //The : denotes a value passed in with the option.
     //This is the list of long options. Columns:  Name, BOOL: takes_value?, NULL, Map to short options.
     const struct option long_options[] = { { "help",          0, NULL, 'h' },
                                            { "version",       0, NULL, 'V' },
                                            { "in",            1, NULL, 'i' },
+                                           { "seen-limit",    1, NULL, 's' },
+                                           { "new-limit",     1, NULL, 'n' },
                                            { "strict-filenames", 0, NULL, 'S' },
                                            { NULL,            0, NULL, 0   }  };
 
@@ -639,8 +646,12 @@ int main(int argc, char* argv[]){
                 std::cout << "----------------------------------------------------------------------------------------------------------" << std::endl;
                 std::cout << "   -h                 --help                                Display this message and exit." << std::endl;
                 std::cout << "   -V                 --version                             Display program version and exit." << std::endl;
-                std::cout << "   -i myfilename      --in myfilename       <none>          Incoming DICOM file names. (Required)" << std::endl;
+                std::cout << "   -i myfilename      --in myfilename       <none>          Flashcard name. If directory, recurses looking for cards." << std::endl;
+                std::cout << "   -s 30              --seen-limit 30       30              Number of previously-seen cards to review in a session. (0 --> infinite.)." << std::endl;
+                std::cout << "   -n 20              --new-limit 20        30              Number of previously-unseen cards to review in a session. (0 --> infinite.)." << std::endl;
                 std::cout << "   -S                 --strict-filenames    <false>         In Flashcard mode, ensure all input ends with '.fcard'." << std::endl;
+                std::cout << std::endl;
+                std::cout << "Note that all other arguments are treated as filenames." << std::endl;
 
                 std::cout << std::endl;
                 std::exit(0);
@@ -649,6 +660,14 @@ int main(int argc, char* argv[]){
             case 'V': 
                 FUNCINFO( "Version: " + Version );
                 std::exit(0);
+                break;
+
+            case 'n':
+                New_Card_Limit = std::stod(optarg);
+                break;
+
+            case 's':
+                Seen_Card_Limit = std::stod(optarg);
                 break;
 
             case 'i':
@@ -776,6 +795,7 @@ int main(int argc, char* argv[]){
     {
         auto f_it = Frames.begin();
         long int New_Card_Count = 0;
+        long int Seen_Card_Count = 0;
         while(f_it != Frames.end()){
 
             records.clear();
@@ -801,7 +821,8 @@ int main(int argc, char* argv[]){
                 }
 
                 //Trim them if needed.
-                if(++New_Card_Count > 2*New_Card_Limit){ // Twice because of virtual cards.
+                if( (New_Card_Limit != 0)
+                &&  (++New_Card_Count > 2*New_Card_Limit )){ // Twice because of virtual cards.
                     f_it = Frames.erase(f_it);
                 }else{
                     ++f_it;
@@ -873,7 +894,8 @@ int main(int argc, char* argv[]){
             const bool got_a_low_q_last_session = !(records.empty());
             //FUNCINFO("   Got a low q last session? --- " << !!got_a_low_q_last_session );
 
-            if( got_a_low_q_last_session || review_due ){
+            if( ( got_a_low_q_last_session || review_due )
+            &&  ( (Seen_Card_Limit == 0) || !(++Seen_Card_Count > 2*Seen_Card_Limit ) ) ){ // Twice because of virtual cards.
                 //FUNCINFO("Added a card");
                 ++f_it;
             }else{

@@ -51,5 +51,14 @@ sqlite3 -header -column ~/.Flashcards.db "
         ( strftime('%s', d_t) > strftime('%s', 'now', 'localtime', '-30 days') )
     ;
 
+    SELECT 
+        avg(q) AS 'Average response rate, last year.',
+        count(q) AS 'Total # of responses, last year.'
+    FROM 
+        sm2_responses 
+    WHERE 
+        ( strftime('%s', d_t) > strftime('%s', 'now', 'localtime', '-1 years') )
+    ;
+
   "
 

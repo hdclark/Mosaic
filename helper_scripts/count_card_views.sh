@@ -1,6 +1,13 @@
 #!/bin/bash
 
-sqlite3 -header -column ~/.Flashcards.db "
+DB_file="$@"
+
+if [ ! -f "${DB_file}" ] ; then
+    printf 'This script requires you to supply the DB file you want to report on.\n' 1>&2
+    exit 1
+fi
+
+sqlite3 -header -column "${DB_file}" "
     SELECT 
         count(uid) AS 'Number of known cards.'
     FROM sm2 

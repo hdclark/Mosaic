@@ -327,8 +327,6 @@ bool Generic_Visual_Media::Load_Current_Frame(void){
 
     //Start of image decoding/loading into memory.
     Magick::Image magicimg;
-    Magick::PixelPacket *magicpixcache = nullptr;
-    Magick::PixelPacket *magicpix      = nullptr;
 
     const auto numb_of_loaded_frames = Frame_List.size();
     if(numb_of_loaded_frames == 0){
@@ -357,37 +355,17 @@ bool Generic_Visual_Media::Load_Current_Frame(void){
         magicimg = *(Frame_List.begin());
     }
 
-    //Now that we have the frame sitting in magicimg, we are agnostic about the filetype.
-    // Just read the data and place it in the buffer.
-    magicpixcache = magicimg.getPixels(0,0, magicimg.columns(), magicimg.rows());
-    if( magicpixcache == nullptr ){
-        FUNCWARN("Unable to load the pixel data. Local error 1");
-        return false;
-    }
-    
     for(long int i=0; i<this->lHeight; ++i) for(long int j=0; j<this->lWidth; ++j){
-        magicpix = magicpixcache + i*magicimg.columns() + j;
+        auto pxl = magicimg.pixelColor(j, i);
+        const auto pxl_r = pxl.quantumRed();
+        const auto pxl_g = pxl.quantumGreen();
+        const auto pxl_b = pxl.quantumBlue();
+        const auto pxl_a = pxl.quantumAlpha();
     
-        if( magicpix == nullptr ){
-            FUNCWARN("Unable to load the pixel data. Local error 2");
-            return false;
-        }
-   
-        //Some of the data in animated files is completely black. I think decoder is badly implemented and cannot handle it.
-        if( !this->Is_Static && (magicpix->red == 0) && (magicpix->green == 0) && (magicpix->blue == 0)){
-
-// NOTE: I think this can be fixed with an ImageMagick setting: -coalesce
-
-            //Then leave the data how it was?
-            //FUNCWARN("Completely black pixel for i,j = " << i << "," << j);
-//        }else if( (magicpix->red == 65535) && (magicpix->green == 65535) && (magicpix->blue == 65535)){
-
-        }else{ 
-            this->R(i,j) = magicpix->red;
-            this->G(i,j) = magicpix->green;
-            this->B(i,j) = magicpix->blue;
-            this->A(i,j) = magicpix->opacity;
-        }
+        this->R(i,j) = pxl_r;
+        this->G(i,j) = pxl_g;
+        this->B(i,j) = pxl_b;
+        this->A(i,j) = pxl_a;
     }
 
     //Set the polling times.

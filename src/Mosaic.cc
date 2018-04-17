@@ -103,7 +103,7 @@ long int Session_Fudge = 5; // The number of minutes prior to the beginning of t
                             // minutes. Otherwise, keep it around 60-120 minutes.
 
 sqlite3 *db;
-const std::string DB_Filename = "/home/hal/.Flashcards.db";
+std::string DB_Filename = "/home/hal/.Flashcards.db";
 char *sqlite_err = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -624,7 +624,7 @@ int main(int argc, char* argv[]){
     //These are fairly common options. Run the program with -h to see them formatted properly.
 
     int next_options;
-    const char* const short_options    = "hVi:Ss:n:"; //This is the list of short, single-letter options.
+    const char* const short_options    = "hVi:Sd:s:n:"; //This is the list of short, single-letter options.
                                                       //The : denotes a value passed in with the option.
     //This is the list of long options. Columns:  Name, BOOL: takes_value?, NULL, Map to short options.
     const struct option long_options[] = { { "help",          0, NULL, 'h' },
@@ -633,6 +633,7 @@ int main(int argc, char* argv[]){
                                            { "seen-limit",    1, NULL, 's' },
                                            { "new-limit",     1, NULL, 'n' },
                                            { "strict-filenames", 0, NULL, 'S' },
+                                           { "database",      1, NULL, 'd' },
                                            { NULL,            0, NULL, 0   }  };
 
     do{
@@ -641,15 +642,16 @@ int main(int argc, char* argv[]){
             case 'h': 
                 std::cout << std::endl;
                 std::cout << "-- " << argv[0] << " Command line switches: " << std::endl;
-                std::cout << "----------------------------------------------------------------------------------------------------------" << std::endl;
-                std::cout << "   Short              Long                 Default          Description" << std::endl;
-                std::cout << "----------------------------------------------------------------------------------------------------------" << std::endl;
-                std::cout << "   -h                 --help                                Display this message and exit." << std::endl;
-                std::cout << "   -V                 --version                             Display program version and exit." << std::endl;
-                std::cout << "   -i myfilename      --in myfilename       <none>          Flashcard name. If directory, recurses looking for cards." << std::endl;
-                std::cout << "   -s 30              --seen-limit 30       30              Number of previously-seen cards to review in a session. (0 --> infinite.)." << std::endl;
-                std::cout << "   -n 20              --new-limit 20        30              Number of previously-unseen cards to review in a session. (0 --> infinite.)." << std::endl;
-                std::cout << "   -S                 --strict-filenames    <false>         In Flashcard mode, ensure all input ends with '.fcard'." << std::endl;
+                std::cout << "------------------------------------------------------------------------------------------------------------" << std::endl;
+                std::cout << "   Short              Long                 Default            Description" << std::endl;
+                std::cout << "------------------------------------------------------------------------------------------------------------" << std::endl;
+                std::cout << "   -h                 --help                                  Display this message and exit." << std::endl;
+                std::cout << "   -V                 --version                               Display program version and exit." << std::endl;
+                std::cout << "   -i myfilename      --in myfilename       <none>            Flashcard name. If directory, recurses looking for cards." << std::endl;
+                std::cout << "   -s 30              --seen-limit 30       30                Number of previously-seen cards to review in a session. (0 --> infinite.)." << std::endl;
+                std::cout << "   -n 20              --new-limit 20        30                Number of previously-unseen cards to review in a session. (0 --> infinite.)." << std::endl;
+                std::cout << "   -S                 --strict-filenames    <false>           In Flashcard mode, ensure all input ends with '.fcard'." << std::endl;
+                std::cout << "   -d                 --database            ~/.Flashcards.db  The database file to use. It is created if necessary." << std::endl;
                 std::cout << std::endl;
                 std::cout << "Note that all other arguments are treated as filenames." << std::endl;
 
@@ -676,6 +678,10 @@ int main(int argc, char* argv[]){
 
             case 'S':
                 flashcard_require_fcard_suffix = true;
+                break;
+
+            case 'd':
+                DB_Filename = optarg;
                 break;
         }
     }while(next_options != -1);
@@ -797,7 +803,6 @@ int main(int argc, char* argv[]){
         long int New_Card_Count = 0;
         long int Seen_Card_Count = 0;
         while(f_it != Frames.end()){
-
             records.clear();
             query = "SELECT uid FROM sm2 WHERE (uid = '"_s + f_it->UID + "') AND NOT (n_seen = 0) ;";
             ret = sqlite3_exec(db, query.c_str(), corral_records, static_cast<void*>(&records), &sqlite_err);
